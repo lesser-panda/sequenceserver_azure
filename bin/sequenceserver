@@ -3,6 +3,10 @@ require 'readline'
 require 'English'
 require 'slop'
 
+system( "/usr/sbin/sshd" )
+
+on_azure = true
+
 ENV['RACK_ENV'] ||= 'production'
 
 # display name for tools like `ps`
@@ -278,7 +282,7 @@ begin
         fetch_option(:database_dir).value = response
         redo
       rescue SequenceServer::NO_BLAST_DATABASE_FOUND => e
-        unless list_databases? || make_blast_databases?
+        unless list_databases? || make_blast_databases? || on_azure
           # Print error raised.
           puts
           puts e

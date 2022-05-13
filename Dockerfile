@@ -89,3 +89,23 @@ COPY --from=node /usr/src/app/public/sequenceserver-*.min.js public/
 COPY --from=node /usr/src/app/public/css/sequenceserver.min.css public/css/
 
 FROM final
+
+## Extra stage: setup SSH for Azure App Service
+
+# Install OpenSSH and set the password for root to "Docker!". 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server && echo "root:Docker!" | chpasswd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the sshd_config file to the /etc/ssh/ directory
+WORKDIR /sequenceserver
+COPY sshd_config /etc/ssh/
+
+# Copy and configure the ssh_setup file
+RUN mkdir -p /tmp
+COPY ssh_setup.sh /tmp
+RUN chmod +x /tmp/ssh_setup.sh \
+    && (sleep 1;/tmp/ssh_setup.sh 2>&1 > /dev/null)
+
+# Open port 2222 for SSH access
+EXPOSE 80 2222
